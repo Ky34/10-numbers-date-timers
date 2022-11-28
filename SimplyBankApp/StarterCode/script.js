@@ -7,6 +7,18 @@ const account1 = {
   transactions: [500, 250, -300, 5000, -850, -110, -170, 1100],
   interest: 1.5,
   pin: 1111,
+  transactionsDates: [
+    '2020-10-02T14:43:31.074Z',
+    '2020-10-29T11:24:19.761Z',
+    '2020-11-15T10:45:23.907Z',
+    '2021-01-22T12:17:46.255Z',
+    '2021-02-12T15:14:06.486Z',
+    '2021-03-09T11:42:26.371Z',
+    '2022-11-25T07:43:59.331Z',
+    '2022-11-27T15:21:20.814Z',
+  ],
+  currency: 'USD',
+  locale: 'en-US',
 };
 
 const account2 = {
@@ -14,6 +26,18 @@ const account2 = {
   transactions: [2000, 6400, -1350, -70, -210, -2000, 5500, -30],
   interest: 1.3,
   pin: 2222,
+  transactionsDates: [
+    '2020-10-02T14:43:31.074Z',
+    '2020-10-29T11:24:19.761Z',
+    '2020-11-15T10:45:23.907Z',
+    '2021-01-22T12:17:46.255Z',
+    '2021-02-12T15:14:06.486Z',
+    '2021-03-09T11:42:26.371Z',
+    '2021-05-21T07:43:59.331Z',
+    '2021-06-22T15:21:20.814Z',
+  ],
+  currency: 'UAH',
+  locale: 'uk-UA',
 };
 
 const account3 = {
@@ -21,6 +45,18 @@ const account3 = {
   transactions: [900, -200, 280, 300, -200, 150, 1400, -400],
   interest: 0.8,
   pin: 3333,
+  transactionsDates: [
+    '2020-10-02T14:43:31.074Z',
+    '2020-10-29T11:24:19.761Z',
+    '2020-11-15T10:45:23.907Z',
+    '2021-01-22T12:17:46.255Z',
+    '2021-02-12T15:14:06.486Z',
+    '2021-03-09T11:42:26.371Z',
+    '2021-05-21T07:43:59.331Z',
+    '2021-06-22T15:21:20.814Z',
+  ],
+  currency: 'RUB',
+  locale: 'ru-RU',
 };
 
 const account4 = {
@@ -28,6 +64,15 @@ const account4 = {
   transactions: [530, 1300, 500, 40, 190],
   interest: 1,
   pin: 4444,
+  transactionsDates: [
+    '2020-10-02T14:43:31.074Z',
+    '2020-10-29T11:24:19.761Z',
+    '2020-11-15T10:45:23.907Z',
+    '2021-01-22T12:17:46.255Z',
+    '2021-02-12T15:14:06.486Z',
+  ],
+  currency: 'CAD',
+  locale: 'fr-CA',
 };
 
 const account5 = {
@@ -35,6 +80,15 @@ const account5 = {
   transactions: [630, 800, 300, 50, 120],
   interest: 1.1,
   pin: 5555,
+  transactionsDates: [
+    '2020-10-02T14:43:31.074Z',
+    '2020-10-29T11:24:19.761Z',
+    '2020-11-15T10:45:23.907Z',
+    '2021-01-22T12:17:46.255Z',
+    '2021-02-12T15:14:06.486Z',
+  ],
+  currency: 'USD',
+  locale: 'en-US',
 };
 
 const accounts = [account1, account2, account3, account4, account5];
@@ -116,23 +170,57 @@ createNicknames(accounts);
 // |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //  -------------------------------ФУНКЦИИ--------------------------------------
 
+// ФУНКЦИЯ ФОРМАТИРУЕТ ДАТУ ТРАНЗАКЦИЙ
+const formatTransactionDate = function (date, locale) {
+  const getPassedBetween2Days = (date1, date2) =>
+    Math.round(Math.abs(date2 - date1) / (1000 * 60 * 60 * 24));
+  const daysPassed = getPassedBetween2Days(new Date(), date);
+  if (daysPassed === 0) return 'Сегодня';
+  if (daysPassed === 1) return 'Вчера';
+  if (daysPassed <= 5) return `${daysPassed} дня назад`;
+  else {
+    // const day = `${date.getDate()}`.padStart(2, '0');
+    // const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    // const year = date.getFullYear();
+    // return `${day}/${month}/${year}`;
+    return new Intl.DateTimeFormat(locale).format(date);
+  }
+};
+
+// ФУНКЦИЯ ФОРМАТИРУЕТ ВАЛЮТУ
+const formatCurrency = function (value, locale, currency) {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+  }).format(value);
+};
+
 // ФУНКЦИЯ ДЕЛАЕТ СПИСОК ТРАНЗАКЦИЙ
-const displayTransactions = function (transactions, sort = false) {
+const displayTransactions = function (account, sort = false) {
   containerTransactions.innerHTML = ''; // с помощью этого свойства очищается контейнер
   // создаем переменную и если сортировка нужна, помещаем в нее копию массива отсортированную по возрастанию, если не нужна помещаем в нее исходный массив
   const transacs = sort
-    ? transactions.slice().sort((x, y) => x - y)
-    : transactions;
-
+    ? account.transactions.slice().sort((x, y) => x - y)
+    : account.transactions;
   transacs.forEach(function (trans, index) {
     // Обьявляем переменную тип транзакции депозит или вывод средств
     const transType = trans > 0 ? 'deposit' : 'withdrawal';
+    const date = new Date(account.transactionsDates[index]);
+    const transDate = formatTransactionDate(date, account.locale);
+
+    const formattedTrans = formatCurrency(
+      trans,
+      account.locale,
+      account.currency
+    );
+
     const transactionRow = `
     <div class="transactions__row">
       <div class="transactions__type transactions__type--${transType}">
         ${index + 1} ${transType}
       </div>
-      <div class="transactions__value">${trans}</div>
+      <div class="transactions__date">${transDate}</div>
+      <div class="transactions__value">${formattedTrans}</div>
     </div>`;
     // вставляем наш transactionRow после начала родительского элемента containerTransactions
     containerTransactions.insertAdjacentHTML('afterbegin', transactionRow); // указываем 2 параметра, 1 как мы хотим вставить элемент, 2-ой какой элемент вставлять
@@ -143,7 +231,11 @@ const displayTransactions = function (transactions, sort = false) {
 const displayBalance = function (account) {
   const balance = account.transactions.reduce((acc, trans) => acc + trans, 0);
   account.balance = balance; // помещаем в объект новое свойство баланс
-  labelBalance.textContent = `${balance}$`;
+  labelBalance.textContent = formatCurrency(
+    balance,
+    account.locale,
+    account.currency
+  );
 };
 
 // ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ СУММЫ ВСЕХ ПОЛУЧЕНИЙ, ВЫВОДОВ СРЕДСТВ И ПРОЦЕНТ
@@ -151,24 +243,36 @@ const displayTotal = function (account) {
   const depositTotal = account.transactions
     .filter(trans => trans > 0)
     .reduce((acc, trans) => acc + trans, 0);
-  labelSumIn.textContent = `${depositTotal}$`;
+  labelSumIn.textContent = formatCurrency(
+    depositTotal,
+    account.locale,
+    account.currency
+  );
 
   const withdrawalTotal = account.transactions
     .filter(trans => trans < 0)
     .reduce((acc, trans) => acc + trans, 0);
-  labelSumOut.textContent = `${withdrawalTotal}$`;
+  labelSumOut.textContent = formatCurrency(
+    withdrawalTotal,
+    account.locale,
+    account.currency
+  );
 
   const interestTotal = account.transactions
     .filter(trans => trans > 0)
     .map(depos => (depos * account.interest) / 100)
     .reduce((acc, interest) => acc + interest, 0);
-  labelSumInterest.textContent = `${interestTotal.toFixed(2)}$`;
+  labelSumInterest.textContent = formatCurrency(
+    interestTotal,
+    account.locale,
+    account.currency
+  );
 };
 
 // ФУНКЦИЯ ОБНОВЛЕНИЯ ИНТЕРФЕЙСА
 const updateUi = function (account) {
   // Display transactions
-  displayTransactions(account.transactions);
+  displayTransactions(account);
 
   // Display balance
   displayBalance(account);
@@ -177,10 +281,39 @@ const updateUi = function (account) {
   displayTotal(account);
 };
 
+// ФУНКЦИЯ ТАЙМЕРА ВЫХОДА
+const startLogoutTimer = function () {
+  const logOutTimerCallBack = () => {
+    const minutes = String(Math.trunc(time / 60)).padStart(2, '0');
+    const seconds = String(time % 60).padStart(2, '0');
+    // В каждом вызове показывать оставшееся время в UI
+    labelTimer.textContent = `${minutes}:${seconds}`;
+
+    // После истечения времени остановить таймер и выйти из приложения
+    if (time === 0) {
+      clearInterval(logOutTimer);
+      containerApp.style.opacity = 0;
+      labelWelcome.textContent = 'Войдите в свой аккаунт';
+    }
+    time--;
+  };
+  // Установить время выхода через 5 минут
+  let time = 300;
+  // Вызов таймера каждую секунду
+  logOutTimerCallBack();
+  const logOutTimer = setInterval(logOutTimerCallBack, 1000);
+  return logOutTimer;
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////
 // ---------------------Event hendlers (слушатели событий)---------------------------
 
-let currentAccount; // обьявляем переменную текущего аккаунта
+let currentAccount, currentLogOutTimer; // обьявляем переменную текущего аккаунта
+
+// Always logged in (залогиненная страница для работы с приложением)
+// currentAccount = account1;
+// updateUi(currentAccount);
+// containerApp.style.opacity = 100;
 
 // ИМПЛЕМЕНТАЦИЯ ЛОГИНА
 // в формах обработчик события срабатывает при нажатии клавиши enter
@@ -192,16 +325,41 @@ btnLogin.addEventListener('click', function (e) {
   );
   console.log(currentAccount);
   // обращаемся к свойству pin только если аккаун существует
-  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+  if (currentAccount?.pin === +inputLoginPin.value) {
+    // + - Number
     // Display UI and welcome message
     containerApp.style.opacity = 100; // показываем UI
     labelWelcome.textContent = `Рады что вы снова с нами, ${
       currentAccount.userName.split(' ')[0]
     }!`;
+    // const now = new Date(); // каждый раз будет создаваться переменная с текущей датой
+    // const day = `${now.getDate()}`.padStart(2, '0'); // добавляем падинг в начало, если 1 цифра добавляем 0
+    // const month = `${now.getMonth() + 1}`.padStart(2, '0'); // тк месяцы начинаются с 0 прибавляем 1
+    // const year = now.getFullYear();
+    // labelDate.textContent = `${day}/${month}/${year}`;
+
+    const now = new Date();
+    const options = {
+      hour: 'numeric',
+      minute: 'numeric',
+      day: 'numeric',
+      month: 'long', // 'long', 'numeric', 2-digit
+      year: 'numeric',
+      weekday: 'long',
+    };
+    labelDate.textContent = new Intl.DateTimeFormat(
+      currentAccount.locale,
+      options
+    ).format(now);
+
     // Clear inputs
     inputLoginUsername.value = '';
     inputLoginPin.value = '';
     inputLoginPin.blur(); // убираем фокус курсора из поля pin
+
+    // Check if the timer exists
+    if (currentLogOutTimer) clearInterval(currentLogOutTimer);
+    currentLogOutTimer = startLogoutTimer();
 
     updateUi(currentAccount); // обновляем интерфейс
   }
@@ -210,7 +368,7 @@ btnLogin.addEventListener('click', function (e) {
 // ИМПЛЕМЕНТАЦИЯ ПЕРЕВОДА СРЕДСТВ
 btnTransfer.addEventListener('click', function (e) {
   e.preventDefault(); // предотвращаем отправку формы
-  const transferAmount = Number(inputTransferAmount.value);
+  const transferAmount = +inputTransferAmount.value;
   const recipientUser = inputTransferTo.value;
   const recipientAccount = accounts.find(
     account => account.nickname === recipientUser // находим счет пользователя-получателя
@@ -224,9 +382,17 @@ btnTransfer.addEventListener('click', function (e) {
     currentAccount.balance >= transferAmount && // баланс отправителя должен быть больше или равен сумме трансфера
     currentAccount.nickname !== recipientAccount?.nickname // при этом условии нельзя отправить самому себе
   ) {
+    // Add transaction
     currentAccount.transactions.push(-transferAmount);
     recipientAccount.transactions.push(transferAmount);
+    // Add transaction date
+    currentAccount.transactionsDates.push(new Date().toISOString());
+    recipientAccount.transactionsDates.push(new Date().toISOString());
     updateUi(currentAccount);
+
+    // Reset the timer
+    clearInterval(currentLogOutTimer);
+    currentLogOutTimer = startLogoutTimer();
   }
 });
 
@@ -235,7 +401,7 @@ btnClose.addEventListener('click', function (e) {
   e.preventDefault(); //  предотвращаем отправку формы
   if (
     currentAccount.nickname === inputCloseUsername.value && //проверяем верный ли логин
-    currentAccount.pin === Number(inputClosePin.value) // проверяем верный ли пин
+    currentAccount.pin === inputClosePin.value // проверяем верный ли пин
   ) {
     // ищем индекс текущего аккаунта в массиве аккаунтов
     const currentAccountIndex = accounts.findIndex(
@@ -254,14 +420,19 @@ btnClose.addEventListener('click', function (e) {
 // условие займа:  хотя бы 1 из депозитов должен быть больше 10% от запрашиваемой суммы
 btnLoan.addEventListener('click', function (e) {
   e.preventDefault();
-  const loanAmount = Number(inputLoanAmount.value); // получаем значение из инпута
+  const loanAmount = Math.floor(inputLoanAmount.value); // получаем значение из инпута, округляем его
   if (
     loanAmount > 0 && // запрашиваемая сумма больше 0
     currentAccount.transactions.some(trans => trans >= (loanAmount * 10) / 100) // проверяем, есть ли в транзакциях пользователя хотя бы 1 депозит больше 10% от запрашиваемой суммы
   ) {
-    currentAccount.transactions.push(loanAmount); // добавляем депозит пользователю
-    updateUi(currentAccount); // обновляем интерфейс
+    setTimeout(function () {
+      currentAccount.transactions.push(loanAmount); // добавляем депозит пользователю
+      currentAccount.transactionsDates.push(new Date().toISOString());
+      updateUi(currentAccount); // обновляем интерфейс
+    }, 4000);
   }
+  clearInterval(currentLogOutTimer);
+  currentLogOutTimer = startLogoutTimer();
   inputLoanAmount.value = ''; // очищаем инпут
 });
 
@@ -274,22 +445,35 @@ let transactionsSorted = false;
 btnSort.addEventListener('click', function (e) {
   e.preventDefault();
   // передаем в функцию парамент тру, так как по нажатию на кнопку нужна сортировка
-  displayTransactions(currentAccount.transactions, !transactionsSorted); // так как изначально значение переменной состояния false а нам нужно передать в функцию при клике true то записываем !transactionsSorted - что означает true
+  displayTransactions(currentAccount, !transactionsSorted); // так как изначально значение переменной состояния false а нам нужно передать в функцию при клике true то записываем !transactionsSorted - что означает true
   transactionsSorted = !transactionsSorted; // меняем значение переменной на противоположное
 });
 
 // Array.from() example
 
+// const logoImage = document.querySelector('.logo');
+// logoImage.addEventListener('click', function () {
+//   const transactionsUi = document.querySelectorAll('.transactions__value'); // выбираем все элементы на странице
+//   console.log(transactionsUi);
+//   // const transactionsUiArray = Array.from(transactionsUi);
+//   // console.log(transactionsUiArray);
+//   // console.log(transactionsUiArray.map(elem => Number(elem.textContent)));
+//   const transactionsUiArray = Array.from(
+//     transactionsUi, // передаем в функцию длинну масива, она будет равна колличеству элементов в transactionsUi
+//     elem => +elem.textContent // элементы создаваемого массива будут взяты из textContent
+//   );
+//   console.log(transactionsUiArray);
+// });
+
 const logoImage = document.querySelector('.logo');
 logoImage.addEventListener('click', function () {
-  const transactionsUi = document.querySelectorAll('.transactions__value'); // выбираем все элементы на странице
-  console.log(transactionsUi);
-  // const transactionsUiArray = Array.from(transactionsUi);
-  // console.log(transactionsUiArray);
-  // console.log(transactionsUiArray.map(elem => Number(elem.textContent)));
-  const transactionsUiArray = Array.from(
-    transactionsUi, // передаем в функцию длинну масива, она будет равна колличеству элементов в transactionsUi
-    elem => Number(elem.textContent) // элементы создаваемого массива будут взяты из textContent
-  );
-  console.log(transactionsUiArray);
+  [...document.querySelectorAll('.transactions__row')].forEach(function (
+    row,
+    i
+  ) {
+    if (i % 3 === 0) {
+      // окрашивает каждую 3-ую строку в серый цвет
+      row.style.backgroundColor = 'grey';
+    }
+  });
 });
